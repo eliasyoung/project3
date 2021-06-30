@@ -5,6 +5,23 @@
       <el-form-item label="名称">
         <el-input v-model="model.name"></el-input>
       </el-form-item>
+      <el-form-item label="上级分类">
+        <el-select v-model="model.parent" placeholder="请选择">
+          <el-option
+            v-for="item in parents"
+            :key="item.value"
+            :label="item.name"
+            :value="item._id"
+          >
+            <span style="float: left">
+              {{ item.name }}
+            </span>
+            <span style="float: right; color: #8492a6; font-size: 12px">
+              {{ item._id }}
+            </span>
+          </el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="onSubmit">保存</el-button>
       </el-form-item>
@@ -21,7 +38,8 @@ import {
   categoryCreate,
   getCategoryById,
   categoryUpdate,
-} from "../http/category";
+  getCategory,
+} from "@/http/category";
 export default {
   name: "CategoryEdit",
   setup(props) {
@@ -50,11 +68,23 @@ export default {
       }
     };
     // id = route.query.id;
+
+    //若有数据随路由传递，则为编辑分类，获取id对应的数据
     const fetch = async (id) => {
       const res = await getCategoryById(id);
       model.value = res.data;
     };
     props.id && fetch(props.id);
+
+    //获取上级分类数据
+    const parents = ref([]);
+    const fetchParents = async () => {
+      const res = await getCategory();
+      parents.value = res.data;
+    };
+    fetchParents();
+
+    //监听路由变化初始化数据
     const route = useRoute();
     watch(route, () => {
       if (!route.params.id) {
@@ -65,6 +95,8 @@ export default {
       model,
       onSubmit,
       fetch,
+      parents,
+      fetchParents,
       //   id,
     };
   },

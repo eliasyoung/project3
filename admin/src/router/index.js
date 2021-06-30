@@ -2,8 +2,12 @@ import { createRouter, createWebHashHistory } from "vue-router";
 // import Home from "../views/Home.vue";
 
 const Main = () => import("views/Main");
-const CategoryEdit = () => import("views/CategoryEdit");
-const CategoryList = () => import("views/CategoryList");
+const CategoryEdit = () => import("views/category/CategoryEdit");
+const CategoryList = () => import("views/category/CategoryList");
+const ItemEdit = () => import("views/item/ItemEdit");
+const ItemList = () => import("views/item/ItemList");
+const HeroEdit = () => import("views/hero/HeroEdit");
+const HeroList = () => import("views/hero/HeroList");
 
 const routes = [
   {
@@ -15,6 +19,12 @@ const routes = [
       { path: "categories/list", component: CategoryList },
       // { path: "categories/edit", component: CategoryEdit },
       { path: "categories/edit/:id", component: CategoryEdit, props: true },
+      { path: "items/create", component: ItemEdit },
+      { path: "items/list", component: ItemList },
+      { path: "items/edit/:id", component: ItemEdit, props: true },
+      { path: "heroes/create", component: HeroEdit },
+      { path: "heroes/list", component: HeroList },
+      { path: "heroes/edit/:id", component: HeroEdit, props: true },
     ],
   },
   /*   {
