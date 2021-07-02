@@ -1,25 +1,14 @@
 <template>
   <div>
-    <h1>{{ id ? "编辑" : "新建" }}物品</h1>
+    <h1>{{ id ? "编辑" : "新建" }}文章</h1>
     <el-form label-width="100px">
-      <el-form-item label="名称">
-        <el-input v-model="model.name"></el-input>
+      <el-form-item label="标题">
+        <el-input v-model="model.title"></el-input>
       </el-form-item>
-      <el-form-item label="图标">
-        <el-upload
-          class="avatar-uploader"
-          :action="$axios.defaults.baseURL + '/upload'"
-          :show-file-list="false"
-          :on-success="afterUpload"
-        >
-          <img v-if="model.icon" :src="model.icon" class="avatar" />
-          <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-        </el-upload>
-      </el-form-item>
-      <!-- <el-form-item label="上级分类">
-        <el-select v-model="model.parent" placeholder="请选择">
+      <el-form-item label="文章分类">
+        <el-select v-model="model.categories" placeholder="请选择" multiple>
           <el-option
-            v-for="item in parents"
+            v-for="item in categories"
             :key="item.value"
             :label="item.name"
             :value="item._id"
@@ -32,13 +21,23 @@
             </span>
           </el-option>
         </el-select>
+      </el-form-item>
+      <!--       <el-form-item label="内容">
+        <v-md-editor
+          v-model="model.body"
+          height="500px"
+          :disabled-menus="[]"
+          @upload-image="handleUploadedImage"
+        ></v-md-editor>
       </el-form-item> -->
+      <el-form-item label="内容">
+        <wang-editor v-model:editorContent="model.body"></wang-editor>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="onSubmit">保存</el-button>
       </el-form-item>
     </el-form>
     {{ model }}
-    <hr />
   </div>
 </template>
 
@@ -47,9 +46,16 @@ import { ref, watch } from "vue";
 // import { useRouter, useRoute } from "vue-router";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import { itemCreate, getItemById, itemUpdate } from "@/http/item";
+import {
+  articleCreate,
+  getArticleById,
+  articleUpdate,
+  uploadMdImage,
+} from "@/http/article";
+import { getCategory } from "@/http/category";
+import WangEditor from "@/components/wangeditor/WangEditor";
 export default {
-  name: "ItemEdit",
+  name: "ArticleEdit",
   setup(props) {
     // let id = ref();
     const model = ref({});
@@ -58,16 +64,16 @@ export default {
     const onSubmit = async () => {
       let res;
       if (props.id) {
-        res = await itemUpdate(props.id, model.value);
-        router.push("/items/list");
+        res = await articleUpdate(props.id, model.value);
+        router.push("/articles/list");
         console.log(res);
         ElMessage.success({
           message: "yosah!!",
           type: "success",
         });
       } else {
-        res = await itemCreate(model.value);
-        router.push("/items/list");
+        res = await articleCreate(model.value);
+        router.push("/articles/list");
         console.log(res);
         ElMessage.success({
           message: "yosh!",
@@ -79,10 +85,30 @@ export default {
 
     //若有数据随路由传递，则为编辑分类，获取id对应的数据
     const fetch = async (id) => {
-      const res = await getItemById(id);
+      const res = await getArticleById(id);
       model.value = res.data;
     };
     props.id && fetch(props.id);
+
+    //获取分类数据
+    const categories = ref([]);
+    const fetchCategories = async () => {
+      const res = await getCategory();
+      categories.value = res.data;
+    };
+    fetchCategories();
+
+    //md编辑器上传图片处理
+    const handleUploadedImage = async (event, insertImage, file) => {
+      console.log(event);
+      const formData = new FormData();
+      formData.append("file", file[0]);
+      const res = await uploadMdImage(formData);
+      insertImage({
+        url: res.data.url,
+        desc: "",
+      });
+    };
 
     //监听路由变化初始化数据
     const route = useRoute();
@@ -91,17 +117,13 @@ export default {
         model.value = {};
       }
     });
-
-    //上传图片
-    const afterUpload = (res) => {
-      console.log(res);
-      model.value.icon = res.url;
-    };
     return {
       model,
       onSubmit,
       fetch,
-      afterUpload,
+      categories,
+      fetchCategories,
+      handleUploadedImage,
       //   id,
     };
   },
@@ -113,31 +135,10 @@ export default {
       },
     },
   },
+  components: {
+    WangEditor,
+  },
 };
 </script>
 
-<style scoped>
-.avatar-uploader .el-upload {
-  border: 1px dashed #d9d9d9;
-  border-radius: 6px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-}
-.avatar-uploader .el-upload:hover {
-  border-color: #409eff;
-}
-.avatar-uploader-icon {
-  font-size: 28px;
-  color: #8c939d;
-  width: 178px;
-  height: 178px;
-  line-height: 178px;
-  text-align: center;
-}
-.avatar {
-  width: 178px;
-  height: 178px;
-  display: block;
-}
-</style>
+<style></style>
