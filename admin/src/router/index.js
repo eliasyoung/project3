@@ -12,6 +12,9 @@ const ArticleEdit = () => import("views/article/ArticleEdit");
 const ArticleList = () => import("views/article/ArticleList");
 const AdEdit = () => import("views/ad/AdEdit");
 const AdList = () => import("views/ad/AdList");
+const AdminUserEdit = () => import("views/adminuser/AdminUserEdit");
+const AdminUserList = () => import("views/adminuser/AdminUserList");
+const Login = () => import("views/Login");
 
 const routes = [
   {
@@ -35,7 +38,15 @@ const routes = [
       { path: "ads/create", component: AdEdit },
       { path: "ads/list", component: AdList },
       { path: "ads/edit/:id", component: AdEdit, props: true },
+      { path: "admin_users/create", component: AdminUserEdit },
+      { path: "admin_users/list", component: AdminUserList },
+      { path: "admin_users/edit/:id", component: AdminUserEdit, props: true },
     ],
+  },
+  {
+    path: "/login",
+    name: "login",
+    component: Login,
   },
   /*   {
     path: "/categories/create",
@@ -60,6 +71,11 @@ const routes = [
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
+});
+
+router.beforeEach((to, from, next) => {
+  if (to.name !== "login" && !localStorage.token) next({ name: "login" });
+  else next();
 });
 
 export default router;

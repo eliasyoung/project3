@@ -3,7 +3,16 @@ module.exports = (app) => {
   const router = express.Router({
     mergeParams: true,
   });
+  const assert = require("http-assert");
+  const AdminUser = require("../../models/AdminUser");
 
+  //login auth middleware: jwt token auth
+  const authMiddleware = require("../../middlewares/auth");
+
+  //resource middleware
+  const resourceMiddleware = require("../../middlewares/resource");
+
+  //create,get,getbyId,updateById,deleteById
   router.post("/", async (req, res) => {
     const model = await req.Model.create(req.body);
     res.send(model);
@@ -31,19 +40,50 @@ module.exports = (app) => {
 
   app.use(
     "/admin/api/rest/:resource",
-    async (req, res, next) => {
-      const modelName = require("inflection").classify(req.params.resource);
-      req.Model = require(`../../models/${modelName}`);
-      next();
-    },
+    authMiddleware(),
+    resourceMiddleware(),
     router
   );
 
+  //upload file router
   const multer = require("multer");
   const upload = multer({ dest: __dirname + "/../../uploads" });
-  app.post("/admin/api/upload", upload.single("file"), async (req, res) => {
-    const file = req.file;
-    file.url = `http://localhost:3000/uploads/${file.filename}`;
-    res.send(file);
+  app.post(
+    "/admin/api/upload",
+    authMiddleware(),
+    upload.single("file"),
+    async (req, res) => {
+      const file = req.file;
+      file.url = `http://localhost:3000/uploads/${file.filename}`;
+      res.send(file);
+    }
+  );
+
+  //login router
+  app.post("/admin/api/login", async (req, res) => {
+    const { username, password } = req.body;
+    // find user with username provided
+    const user = await AdminUser.findOne({ username }).select("+password");
+    assert(user, 422, "User doesnt exist!");
+    // check if password is valid
+    const isValid = require("bcryptjs").compareSync(password, user.password);
+    assert(isValid, 422, "Username or Password not valid");
+    //assert did things below
+    /* if (!isValid) {
+      return res.status(422).send({
+        message: "Username or Password not valid",
+      });
+    } */
+    // return token to frontend
+    const jwt = require("jsonwebtoken");
+    const token = jwt.sign({ _id: user._id }, app.get("secret"));
+    res.send({ token });
+  });
+
+  // error handler
+  app.use(async (err, req, res, next) => {
+    res.status(err.statusCode || 500).send({
+      message: err.message,
+    });
   });
 };

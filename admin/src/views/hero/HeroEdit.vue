@@ -14,6 +14,7 @@
             <el-upload
               class="avatar-uploader"
               :action="$axios.defaults.baseURL + '/upload'"
+              :headers="getHeader()"
               :show-file-list="false"
               :on-success="afterUpload"
             >
@@ -147,6 +148,7 @@
                   <el-upload
                     class="avatar-uploader"
                     :action="$axios.defaults.baseURL + '/upload'"
+                    :headers="getHeader()"
                     :show-file-list="false"
                     :on-success="(res) => afterSkillsIconUpload(index, res)"
                   >
@@ -252,6 +254,13 @@ export default {
       model.value.skills[index].icons = res.url;
     };
 
+    // 获取上传所需headers
+    const getHeader = () => {
+      return {
+        Authorization: localStorage.token ? "Bearer " + localStorage.token : "",
+      };
+    };
+
     //获取定位categories
     const locations = ref([]);
     const fetchCategories = async () => {
@@ -302,6 +311,7 @@ export default {
       fetch,
       afterUpload,
       afterSkillsIconUpload,
+      getHeader,
       locations,
       equips,
       removeSkill,
