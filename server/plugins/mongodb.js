@@ -5,4 +5,8 @@ module.exports = (app) => {
     useUnifiedTopology: true,
     useFindAndModify: false,
   });
+
+  require("require-all")(__dirname + "/../models");
+
+  
 };
